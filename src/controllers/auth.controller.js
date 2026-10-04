@@ -133,7 +133,7 @@ const forgotPassword = async (req, res, next) => {
 
     await user.save();
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/ResetPassword?token=${resetToken}`;
 
     const emailMessage = `
       <div style="font-family: Arial, sans-serif; direction: rtl;">
