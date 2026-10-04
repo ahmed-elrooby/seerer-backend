@@ -182,9 +182,10 @@ const forgotPassword = async (req, res, next) => {
       message:
         "إذا كان البريد الإلكتروني مسجلًا لدينا، سيتم إرسال رابط إعادة تعيين كلمة المرور إليه",
     });
-  } catch (error) {
-    next(error);
-  }
+  }  catch (error) {
+  console.error("FORGOT PASSWORD ERROR:", error);
+  next(error);
+}
 };
 const resetPassword = async (req, res, next) => {
   try {
