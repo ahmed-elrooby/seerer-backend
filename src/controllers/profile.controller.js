@@ -84,10 +84,11 @@ const updateProfile = async (req, res, next) => {
       if (userData.name !== undefined) {
         if (
           typeof userData.name !== "string" ||
-          !userData.name.trim()
+          userData.name.trim().length < 2 ||
+          userData.name.trim().length > 100
         ) {
           return next(
-            new AppError("الاسم مطلوب", 400)
+            new AppError("الاسم يجب أن يكون من 2 إلى 100 حرف", 400)
           );
         }
 
@@ -130,7 +131,7 @@ const updateProfile = async (req, res, next) => {
       await user.save();
     }
 
-    // 2. تحديث بيانات المنشأة الخاصة بمدير المستشفى فقط
+    // 2. تحديث بيانات المنشأة لمدير المستشفى فقط
     let facility = null;
 
     if (user.role === "hospital_admin") {
@@ -158,11 +159,11 @@ const updateProfile = async (req, res, next) => {
           );
         }
 
-        // عدّل القائمة لتطابق الحقول الموجودة في الموديل عندك
         const allowedFacilityFields = [
           "name",
-          "address",
           "phone",
+          "address",
+          "location",
         ];
 
         const invalidFacilityField = Object.keys(
@@ -180,11 +181,14 @@ const updateProfile = async (req, res, next) => {
           );
         }
 
-        for (const field of allowedFacilityFields) {
+        // تحديث اسم المنشأة ورقم الهاتف والعنوان
+        for (const field of ["name", "phone", "address"]) {
           if (facilityData[field] !== undefined) {
+            const value = facilityData[field];
+
             if (
-              typeof facilityData[field] !== "string" ||
-              !facilityData[field].trim()
+              typeof value !== "string" ||
+              !value.trim()
             ) {
               return next(
                 new AppError(
@@ -194,10 +198,56 @@ const updateProfile = async (req, res, next) => {
               );
             }
 
-            facility[field] = facilityData[field].trim();
+            facility[field] = value.trim();
           }
         }
 
+        // تحديث الموقع الجغرافي GeoJSON
+        if (facilityData.location !== undefined) {
+          const { location } = facilityData;
+
+          if (
+            !location ||
+            typeof location !== "object" ||
+            location.type !== "Point" ||
+            !Array.isArray(location.coordinates) ||
+            location.coordinates.length !== 2
+          ) {
+            return next(
+              new AppError(
+                "بيانات الموقع الجغرافي غير صحيحة",
+                400
+              )
+            );
+          }
+
+          const [longitude, latitude] = location.coordinates;
+
+          if (
+            typeof longitude !== "number" ||
+            typeof latitude !== "number" ||
+            !Number.isFinite(longitude) ||
+            !Number.isFinite(latitude) ||
+            longitude < -180 ||
+            longitude > 180 ||
+            latitude < -90 ||
+            latitude > 90
+          ) {
+            return next(
+              new AppError(
+                "إحداثيات الموقع الجغرافي غير صحيحة",
+                400
+              )
+            );
+          }
+
+          facility.location = {
+            type: "Point",
+            coordinates: [longitude, latitude],
+          };
+        }
+
+        // حفظ بيانات المنشأة في MongoDB
         await facility.save();
       }
     } else if (facilityData !== undefined) {
@@ -209,6 +259,7 @@ const updateProfile = async (req, res, next) => {
       );
     }
 
+    // 3. الاستجابة النهائية
     return res.status(200).json({
       success: true,
       message: "تم تحديث البيانات بنجاح",
@@ -227,5 +278,6 @@ const updateProfile = async (req, res, next) => {
     next(error);
   }
 };
+
 
 export { getProfile, updateProfile };
