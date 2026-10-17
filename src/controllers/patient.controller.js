@@ -130,12 +130,13 @@ const searchNearbyFacilities = async (req, res, next) => {
 
           distance: 1,
 
-          unit: {
-            _id: 1,
-            name: 1,
-            type: 1,
-            availableBeds: 1,
-          },
+         unit: {
+  _id: 1,
+  name: 1,
+  type: 1,
+  availableBeds: 1,
+  bedsUpdatedAt: 1,
+},
         },
       },
     ]);
