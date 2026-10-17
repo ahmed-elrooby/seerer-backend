@@ -20,12 +20,17 @@ const unitSchema = new Schema(
       required: true,
     },
 
-    availableBeds: {
-      type: Number,
-      required: true,
-      min: 0,
-      default: 0,
-    },
+   availableBeds: {
+  type: Number,
+  required: true,
+  min: 0,
+  default: 0,
+},
+
+bedsUpdatedAt: {
+  type: Date,
+  default: Date.now,
+},
 
     isActive: {
       type: Boolean,

@@ -95,6 +95,7 @@ const getUnitById = async (req, res, next) => {
   }
 };
 
+
 const updateUnit = async (req, res, next) => {
   try {
     const unit = await unitModel.findOne({
@@ -147,11 +148,24 @@ const updateUnit = async (req, res, next) => {
       }
     }
 
-    Object.assign(unit, req.body);
+    // هل عدد السراير اتغير فعلًا؟
+    const bedsChanged =
+      req.body.availableBeds !== undefined &&
+      Number(req.body.availableBeds) !== unit.availableBeds;
+
+    // تحديث وقت تغيير السراير فقط
+    if (bedsChanged) {
+      unit.bedsUpdatedAt = new Date();
+    }
+
+    // منع العميل من تحديد وقت التحديث بنفسه
+    const { bedsUpdatedAt, ...updateData } = req.body;
+
+    Object.assign(unit, updateData);
 
     await unit.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "تم تحديث الوحدة بنجاح",
       data: unit,
@@ -160,6 +174,7 @@ const updateUnit = async (req, res, next) => {
     next(error);
   }
 };
+
 
 const deleteUnit = async (req, res, next) => {
   try {
