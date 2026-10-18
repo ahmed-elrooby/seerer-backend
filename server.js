@@ -19,7 +19,6 @@ const allowedOrigins = [
 "https://sreer.net",
 "https://www.sreer.net",
 ];
-
 app.use(
   cors({
     origin: (origin, callback) => {
