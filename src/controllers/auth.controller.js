@@ -12,12 +12,12 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Check required fields
     if (!email || !password) {
-      return next(new AppError("الايميل وكلمة المرور مطلوبة", 400));
+      return next(
+        new AppError("الايميل وكلمة المرور مطلوبة", 400)
+      );
     }
 
-    // Find user
     const user = await userModel.findOne({ email });
 
     if (!user) {
@@ -26,7 +26,6 @@ const login = async (req, res, next) => {
       );
     }
 
-    // Check password
     const isPasswordCorrect = await bcrypt.compare(
       password,
       user.password
@@ -38,7 +37,6 @@ const login = async (req, res, next) => {
       );
     }
 
-    // Check account status
     if (user.isActive === false) {
       return res.status(403).json({
         success: false,
@@ -46,7 +44,6 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Create JWT
     const token = jwt.sign(
       {
         userId: user._id,
@@ -59,27 +56,18 @@ const login = async (req, res, next) => {
       }
     );
 
-    // =========================
-    // Web Authentication
-    // =========================
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite:
-        process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "lax",
+      domain: ".sreer.net",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // =========================
-    // Response
-    // =========================
     return res.status(200).json({
       success: true,
       message: "تم تسجيل الدخول بنجاح",
-
-      // Flutter will use this token
-      token,
-
       user: {
         id: user._id,
         name: user.name,
@@ -242,11 +230,10 @@ const logout = async (req, res, next) => {
   try {
     res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite:
-        process.env.NODE_ENV === "production"
-          ? "none"
-          : "lax",
+      secure: true,
+      sameSite: "lax",
+      domain: ".sreer.net",
+      path: "/",
     });
 
     return res.status(200).json({
